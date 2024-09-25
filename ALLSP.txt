@@ -1,0 +1,1250 @@
+/****** Object:  StoredProcedure [dbo].[test]    Script Date: 2024-09-11 15:58:12 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE proc [dbo].[test]
+ @userId int =null,      
+ @viewFor VARCHAR(40)=null,      
+ @Tier Int=null,    
+ @datefilter varchar(500)=null    ,
+ @errCode SMALLINT OUTPUT 
+as begin
+
+with temp as
+(
+  select  distinct 
+ --CONVERT(varchar(15),CAST(imageTime AS TIME),100) x,
+  imageTimestamp as x,
+  sum(count) as y from [dbo].[Results] a 
+  inner join [dbo].[dimSpecies] b on a.species=b.Species   where  CONVERT(date, imageDate ) = '2024-07-30'  
+  AND TIER IN(1,4) and count!=0 
+  group by  imageTime, imageDate,imageTimestamp
+  ) select ROW_NUMBER() OVER (ORDER BY x) Id, * from temp
+
+
+end 
+
+
+
+  
+GO
+/****** Object:  StoredProcedure [dbo].[Test2]    Script Date: 2024-09-11 15:58:12 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+        
+-- =============================================          
+ -- Test2 0,'FISHSPECIES','2024-07-01','2024-07-30',null,null    
+ -- tnk_GetChartData_BioDetail 0,'MEGAFAUNA','2024-07-01','2024-07-30',null,null    
+ -- tnk_GetChartData_BioDetail 0,'INVERTABLES','2024-07-01','2024-07-30',null,null    
+CREATE   PROCEDURE [dbo].[Test2]        
+ @userId int =null,        
+ @viewFor VARCHAR(40)=null,        
+ @startDate varchar(50)=null,  
+ @endDate varchar(50)=null,  
+ @species varchar(500)=null,      
+ @errCode SMALLINT OUTPUT        
+AS        
+ SET NOCOUNT ON        
+ SET @errCode = 200;        
+BEGIN         
+ BEGIN TRY        
+  
+ IF  @viewFor='FISHSPECIES'        
+  BEGIN      
+      
+  with temp as (      
+  select  distinct 'ALL Species' as [Value],1 as IsSelected from [dbo].dimSpecies a      
+  union All      
+  select  distinct b.SpeciesEnglish as [Value],0 AS [COUNT] from [dbo].[Results] a   
+  inner join [dbo].[dimSpecies] b on a.species=b.Species   where      
+   TIER IN(1,4) and count!=0      
+   AND CONVERT(date, imageDate ) >= convert(date,@startDate)   
+   and CONVERT(date, imageDate ) <= convert(date,@endDate)  
+  ) select  ROW_NUMBER() OVER (ORDER BY [Value]) Id,* from temp;      
+      
+  
+  
+  WITH TEMP AS  
+  (  
+    select  distinct  
+    FORMAT(imageTimestamp, 'yyyy-MM-dd HH:00') as x  
+    ,sum(count) as y  
+    ,SpeciesEnglish as Species  
+    from [dbo].[Results] a     
+    inner join [dbo].[dimSpecies] b on a.species=b.Species     
+    where      
+      TIER IN(1,4) and count!=0      
+      AND CONVERT(date, imageDate ) >= convert(date,@startDate)   
+      and CONVERT(date, imageDate ) <= convert(date,@endDate)  
+    group by FORMAT(imageTimestamp, 'yyyy-MM-dd HH:00'), SpeciesEnglish  
+  
+  )SELECT ROW_NUMBER() OVER (ORDER BY x) Id, *  
+  FROM TEMP  
+  ORDER BY Species ASC  
+  
+    
+  END      
+  ELSE IF  @viewFor='MEGAFAUNA'        
+  BEGIN      
+      
+  with temp as (      
+  select  distinct 'ALL Species' as [Value],1 as IsSelected from [dbo].dimSpecies a      
+  union All      
+  select  distinct b.SpeciesEnglish as [Value],0 AS [COUNT] from [dbo].[Results] a   
+  inner join [dbo].[dimSpecies] b on a.species=b.Species   where      
+   TIER =3  
+   and count!=0      
+   AND CONVERT(date, imageDate ) >= convert(date,@startDate)   
+   and CONVERT(date, imageDate ) <= convert(date,@endDate)  
+  ) select  ROW_NUMBER() OVER (ORDER BY [Value]) Id,* from temp;      
+      
+  WITH TEMP AS  
+  (  
+    select  distinct  
+    FORMAT(imageTimestamp, 'yyyy-MM-dd HH:mm') as x  
+    ,sum(count) as y  
+    ,SpeciesEnglish as Species  
+    from [dbo].[Results] a     
+    inner join [dbo].[dimSpecies] b on a.species=b.Species     
+    where      
+      TIER = 3   
+      and count!=0      
+      AND CONVERT(date, imageDate ) >= convert(date,@startDate)   
+      and CONVERT(date, imageDate ) <= convert(date,@endDate)  
+    group by FORMAT(imageTimestamp, 'yyyy-MM-dd HH:mm'), SpeciesEnglish  
+  
+  )SELECT ROW_NUMBER() OVER (ORDER BY x) Id, *  
+  FROM TEMP  
+  ORDER BY Species ASC  
+  
+    
+  END      
+    ELSE IF  @viewFor='INVERTABLES'        
+  BEGIN      
+      
+  with temp as (      
+  select  distinct 'ALL Species' as [Value],1 as IsSelected from [dbo].dimSpecies a      
+  union All      
+  select  distinct b.SpeciesEnglish as [Value],0 AS [COUNT] from [dbo].[Results] a   
+  inner join [dbo].[dimSpecies] b on a.species=b.Species   where      
+   TIER =2  
+   and count!=0      
+   AND CONVERT(date, imageDate ) >= convert(date,@startDate)   
+   and CONVERT(date, imageDate ) <= convert(date,@endDate)  
+  ) select  ROW_NUMBER() OVER (ORDER BY [Value]) Id,* from temp;      
+      
+  WITH TEMP AS  
+  (  
+    select  distinct  
+    FORMAT(imageTimestamp, 'yyyy-MM-dd HH:mm') as x  
+    ,sum(count) as y  
+    ,SpeciesEnglish as Species  
+    from [dbo].[Results] a     
+    inner join [dbo].[dimSpecies] b on a.species=b.Species     
+    where      
+      TIER = 2  
+      and count!=0      
+      AND CONVERT(date, imageDate ) >= convert(date,@startDate)   
+      and CONVERT(date, imageDate ) <= convert(date,@endDate)  
+    group by FORMAT(imageTimestamp, 'yyyy-MM-dd HH:mm'), SpeciesEnglish  
+  
+  )SELECT ROW_NUMBER() OVER (ORDER BY x) Id, *  
+  FROM TEMP  
+  ORDER BY Species ASC  
+  
+    
+  END   
+ END TRY        
+ BEGIN CATCH        
+  SET @errCode = 400;        
+  --EXEC dbo.usp_LogError @accountID, @errCode OUTPUT        
+ END CATCH        
+END        
+GO
+/****** Object:  StoredProcedure [dbo].[tnk_GetAlertSpeciesChartData]    Script Date: 2024-09-11 15:58:12 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+                
+-- =============================================                
+--tnk_GetAlertSpeciesChartData 0,'ALERTSPECIESCHARTDATA','2024-09-01','2024-09-06','',null  
+--tnk_GetAlertSpeciesChartData 0,'ALERTSPECIESCHARTDATA','2024-06-06','2024-09-30','',null  
+
+CREATE PROCEDURE [dbo].[tnk_GetAlertSpeciesChartData]                
+    @userId INT = NULL,                
+    @viewFor VARCHAR(40) = NULL,                
+    @startDate VARCHAR(50) = NULL,                
+ @endDate varchar(50)=null,          
+ @species varchar(500)=null,          
+    @errCode SMALLINT OUTPUT                
+AS                
+BEGIN                
+    SET NOCOUNT ON;                
+    SET @errCode = 200;                
+                
+    BEGIN TRY        
+   
+  
+ DECLARE @RETURNTABLE TABLE    
+ (    
+   Id int,    
+   [count] int,    
+   ImageDate datetime,    
+   Species varchar(100)  
+  )    
+  
+IF @viewFor = 'ALERTSPECIESCHARTDATA'                
+BEGIN                
+              
+    WITH CTE_Results AS (  
+    SELECT   
+        imageDate,   
+        Results.species,   
+        SUM([count]) AS total_count  
+    FROM Results  
+    JOIN dimSpecies d ON d.Species = Results.species  
+    WHERE IsAlert = 1  
+    AND  Convert(Date, imageDate ) >= Convert(date, @startDate   )
+	AND Convert(Date, imageDate ) <= Convert(date, @endDate)
+    GROUP BY imageDate, Results.species  
+)  
+INSERT INTO @RETURNTABLE    
+SELECT   
+    CAST(ROW_NUMBER() OVER (ORDER BY imageDate) AS INT) AS Id,  
+    total_count AS count,  
+    imageDate,  
+    species  
+FROM CTE_Results;
+  
+  
+with temp1 as (              
+  select  distinct 'ALL Species' as [Value],1 as IsSelected from [dbo].dimSpecies a              
+  union All      
+  select distinct Species,0 as IsSelected  from @RETURNTABLE    
+  )select  ROW_NUMBER() OVER (ORDER BY [Value]) Id,* from temp1;     
+      
+  
+select count, CONVERT(DATE,ImageDate) as ImageDate, Species from @RETURNTABLE  
+order by Species Asc  
+  
+  END    
+  
+    END TRY                
+    BEGIN CATCH                
+        SET @errCode = 400;                
+        --EXEC dbo.usp_LogError @accountID, @errCode OUTPUT                      
+    END CATCH                
+END 
+GO
+/****** Object:  StoredProcedure [dbo].[tnk_GetChartData]    Script Date: 2024-09-11 15:58:12 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+-- =============================================
+CREATE PROCEDURE [dbo].[tnk_GetChartData]    
+    @userId INT,    
+    @viewFor VARCHAR(40),    
+    @Tier INT, 
+    @startDate VARCHAR(20),
+	@endDate VARCHAR(20),
+    @errCode SMALLINT OUTPUT    
+AS    
+BEGIN    
+    SET NOCOUNT ON;    
+    SET @errCode = 200;    
+
+    BEGIN TRY    
+        IF @viewFor = 'BIODIVERSITY'    
+        BEGIN    
+            IF @Tier = 0    
+            BEGIN    
+                SELECT DISTINCT 0 AS Id, 'All tier' AS Value, 1 AS IsSelected 
+                FROM dimSpecies d UNION ALL SELECT DISTINCT d.Tier AS Id, 'Tier ' + CAST(d.Tier AS VARCHAR) AS Value, 0 AS IsSelected  FROM dimSpecies d;
+				
+                SELECT DISTINCT d.Tier, d.Species FROM dimSpecies d;
+				
+                SELECT r.imageDate, SUM(r.[count]) AS count,r.Species, d.Tier FROM Results r left join dimSpecies d ON r.Species = d.Species WHERE d.Tier IN (1, 2, 3, 4) AND CONVERT(DATE, r.imageDate) >= @startDate AND CONVERT(DATE, r.imageDate) <= @endDate GROUP BY r.imageDate, r.Species, d.Tier ORDER BY r.imageDate, r.Species;
+
+            END    
+            ELSE    
+            BEGIN    
+                SELECT DISTINCT 0 AS Id, 'All tier' AS Value, 0 AS IsSelected 
+                FROM dimSpecies d UNION ALL SELECT DISTINCT d.Tier AS Id,'Tier ' + CAST(d.Tier AS VARCHAR) AS Value,CASE WHEN d.Tier = @Tier THEN 1 ELSE 0 END AS IsSelected 
+                FROM dimSpecies d;    
+    
+                SELECT DISTINCT d.Tier, d.Species FROM dimSpecies d 
+                WHERE Tier = @Tier;    
+    
+                SELECT r.imageDate, SUM(r.[count]) AS count,r.Species, d.Tier FROM Results r left JOIN dimSpecies d ON r.Species = d.Species WHERE d.Tier =@Tier AND CONVERT(DATE, r.imageDate) >= @startDate AND CONVERT(DATE, r.imageDate) <= @endDate GROUP BY r.imageDate, r.Species, d.Tier ORDER BY r.imageDate, r.Species;
+            END    
+        END    
+    END TRY    
+    BEGIN CATCH    
+        SET @errCode = 400;    
+        --EXEC dbo.usp_LogError @accountID, @errCode OUTPUT    
+    END CATCH;    
+END;
+GO
+/****** Object:  StoredProcedure [dbo].[tnk_GetChartData_BioDetail]    Script Date: 2024-09-11 15:58:12 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+              
+-- =============================================                
+ -- tnk_GetChartData_BioDetail 0,'FISHSPECIES','2024-07-30','2024-07-30',null,null          
+ -- tnk_GetChartData_BioDetail 0,'MEGAFAUNA','2024-07-30','2024-07-30',null,null          
+ -- tnk_GetChartData_BioDetail 0,'INVERTABLES','2024-09-06','2024-09-06',null,null          
+CREATE PROCEDURE [dbo].[tnk_GetChartData_BioDetail]              
+ @userId int =null,              
+ @viewFor VARCHAR(40)=null,              
+ @startDate varchar(50)=null,        
+ @endDate varchar(50)=null,        
+ @species varchar(500)=null,            
+ @errCode SMALLINT OUTPUT              
+AS              
+ SET NOCOUNT ON              
+ SET @errCode = 200;              
+BEGIN               
+ BEGIN TRY              
+  
+ DECLARE @RETURNTABLE TABLE  
+ (  
+  Id int,  
+  x dateTIME,  
+  y int,  
+  Species varchar(100),  
+  SpeciesEnglish VARCHAR(100)  
+  
+  )  
+  
+   
+ IF  @viewFor='FISHSPECIES'              
+  BEGIN            
+              
+  WITH TEMP AS (  
+    SELECT   
+        DATEADD(HOUR, DATEPART(HOUR, imageTimestamp), CAST(CAST(imageTimestamp AS DATE) AS DATETIME)) AS x,  
+        SUM(count) AS y,  
+        rtrim(ltrim(b.SpeciesEnglish)) AS SpeciesEnglish, rtrim(ltrim(a.Species)) as Species
+    FROM [dbo].[Results] a  
+    INNER JOIN [dbo].[dimSpecies] b ON a.species = b.Species  
+    WHERE   
+        b.TIER IN (1, 4)   
+        AND a.count != 0  
+        AND imageDate >= @startDate   
+        AND imageDate <= @endDate  
+    GROUP BY   
+        DATEADD(HOUR, DATEPART(HOUR, imageTimestamp), CAST(CAST(imageTimestamp AS DATE) AS DATETIME)),  
+        b.SpeciesEnglish,a.Species  
+)INSERT INTO @RETURNTABLE  
+SELECT   
+   CAST( ROW_NUMBER() OVER (ORDER BY x) AS INT) AS Id, x, y, Species,SpeciesEnglish  
+FROM   
+    TEMP;  
+     
+  END            
+  ELSE IF  @viewFor='MEGAFAUNA'              
+  BEGIN            
+        
+  WITH TEMP AS (  
+    SELECT   
+        DATEADD(HOUR, DATEPART(HOUR, imageTimestamp), CAST(CAST(imageTimestamp AS DATE) AS DATETIME)) AS x,  
+        SUM(a.count) AS y,  
+        b.SpeciesEnglish , a.Species  
+    FROM   
+        [dbo].[Results] a  
+    INNER JOIN   
+        [dbo].[dimSpecies] b ON a.species = b.Species  
+    WHERE   
+        b.TIER = 3   
+        AND a.count != 0  
+        AND a.imageDate >= @startDate  
+        AND a.imageDate <= @endDate  
+    GROUP BY   
+        DATEADD(HOUR, DATEPART(HOUR, imageTimestamp), CAST(CAST(imageTimestamp AS DATE) AS DATETIME)),  
+        b.SpeciesEnglish,a.Species  
+)INSERT INTO @RETURNTABLE  
+SELECT   
+    ROW_NUMBER() OVER (ORDER BY x) AS Id,x, y, Species,SpeciesEnglish  
+FROM   
+    TEMP  
+      
+  END            
+    ELSE IF  @viewFor='INVERTABLES'              
+  BEGIN            
+         
+  WITH TEMP AS (  
+    SELECT DISTINCT   
+        DATEADD(HOUR, DATEPART(HOUR, imageTimestamp), CAST(CAST(imageTimestamp AS DATE) AS DATETIME)) AS x,  
+        SUM(a.count) AS y,  
+        b.SpeciesEnglish, a.Species  
+    FROM   
+        [dbo].[Results] a  
+    INNER JOIN   
+        [dbo].[dimSpecies] b ON a.species = b.Species  
+    WHERE   
+        b.TIER = 2   
+        AND a.count != 0  
+        AND a.imageDate BETWEEN @startDate AND @endDate  
+    GROUP BY   
+        DATEADD(HOUR, DATEPART(HOUR, imageTimestamp), CAST(CAST(imageTimestamp AS DATE) AS DATETIME)),  
+        b.SpeciesEnglish,a.Species  
+)INSERT INTO @RETURNTABLE  
+SELECT   
+    ROW_NUMBER() OVER (ORDER BY x) AS Id, x,y,Species,SpeciesEnglish  
+FROM   
+    TEMP     
+  END    
+    
+    
+    
+  ;with temp1 as (            
+  select  distinct 'ALL Species' as [Value],1 as IsSelected from [dbo].dimSpecies a            
+  union All    
+  select distinct SpeciesEnglish,0 as IsSelected  from @RETURNTABLE  
+  )select  ROW_NUMBER() OVER (ORDER BY [Value]) Id,* from temp1;   
+    
+ SELECT id,x,y,SpeciesEnglish as Species FROM @RETURNTABLE  
+ ORDER BY Species ASC   
+  
+ END TRY              
+ BEGIN CATCH              
+  SET @errCode = 400;              
+  --EXEC dbo.usp_LogError @accountID, @errCode OUTPUT              
+ END CATCH              
+END 
+GO
+/****** Object:  StoredProcedure [dbo].[tnk_GetChartData_BKP]    Script Date: 2024-09-11 15:58:12 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+  
+-- =============================================  
+CREATE   PROCEDURE [dbo].[tnk_GetChartData_BKP]  
+ @userId int,  
+ @viewFor VARCHAR(40),  
+ @Tier Int,  
+ @errCode SMALLINT OUTPUT  
+AS  
+ SET NOCOUNT ON  
+ SET @errCode = 200;  
+BEGIN   
+ BEGIN TRY  
+  IF @viewFor='BIODIVERSITY'  
+  BEGIN  
+   IF @Tier=0  
+   BEGIN  
+  
+    SELECT DISTINCT 0 AS Id, 'All tier' AS Value,1 as IsSelected FROM dimSpecies d     UNION ALL     SELECT DISTINCT d.Tier AS Id,                   'Tier ' + CAST(d.Tier AS VARCHAR) AS Value,0 as IsSelected   from dimSpecies d  
+  
+    select distinct d.Tier, d.Species from dimSpecies d  
+  
+    select distinct   r.* from Results r join  dimSpecies d on r.Species=d.Species and Tier in (1,2,3,4)  
+   END  
+   ELSE  
+   BEGIN  
+    SELECT DISTINCT 0 AS Id, 'All tier' AS Value,0 as IsSelected FROM dimSpecies d      UNION ALL     SELECT DISTINCT d.Tier AS Id,                   
+	'Tier ' + CAST(d.Tier AS VARCHAR) AS Value,CASE 
+	WHEN d.Tier = @Tier  THEN 1 ELSE 0 END AS IsSelected from dimSpecies d  
+    select distinct d.Tier, d.Species from dimSpecies d where Tier=@Tier  
+    select distinct  r.* from Results r join  dimSpecies d on r.Species=d.Species and Tier=@Tier;  
+   END  
+  END  
+ END TRY  
+ BEGIN CATCH  
+  SET @errCode = 400;  
+  --EXEC dbo.usp_LogError @accountID, @errCode OUTPUT  
+ END CATCH  
+END  
+  
+  
+  
+GO
+/****** Object:  StoredProcedure [dbo].[tnk_GetChartData_CSV]    Script Date: 2024-09-11 15:58:12 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+          
+-- =============================================          
+-- tnk_GetChartData_CSV 'ALERTSPECIES_CSV','2024-05-28','2024-08-28 00:00:00',0,'',null,null  
+-- tnk_GetChartData_CSV 'FISHSPECIESCSV','2024-07-30','2024-07-30',0,'',null,null  
+-- tnk_GetChartData_CSV 'INVERTABESSPECIESCSV','2024-07-30','2024-07-30',0,'',null,null  
+-- tnk_GetChartData_CSV 0,'FISHSPECIES',0,null,null              
+          
+CREATE PROCEDURE [dbo].[tnk_GetChartData_CSV]                
+@viewFor VARCHAR(40) = NULL,          
+@startDate varchar(50) = NULL,    
+ @endDate varchar(50) = NULL,    
+ @userId INT = NULL,    
+ @station varchar(500)=null,  
+ @tier int=null,  
+ @Species varchar(500)=null,
+ @errCode SMALLINT OUTPUT          
+AS          
+BEGIN          
+    SET NOCOUNT ON;          
+    SET @errCode = 200;          
+          
+    BEGIN TRY      
+	
+		IF @viewFor = 'BIODIVERSITY_CSV'  
+		BEGIN  
+			if @tier=0
+			BEGIN
+				SELECT DISTINCT 
+					SUM([count]) AS count, 
+					imageDate, 
+					Results.species               
+				FROM 
+					Results              
+				JOIN 
+					dimSpecies d 
+					ON d.Species = Results.species            
+				WHERE                             
+					 CONVERT(DATE, imageDate) >= CONVERT(DATE, @startDate)              
+					AND CONVERT(DATE, imageDate) <= CONVERT(DATE, @endDate)        
+					AND [count] != 0   and d.Tier in (1,2,3,4)       
+				GROUP BY 
+					imageDate, 
+					Results.species      
+				ORDER BY 
+					Results.species ASC
+			END
+			ELSE
+			BEGIN
+				SELECT DISTINCT 
+					SUM([count]) AS count, 
+					imageDate, 
+					Results.species               
+				FROM 
+					Results              
+				JOIN 
+					dimSpecies d 
+					ON d.Species = Results.species            
+				WHERE                             
+					 CONVERT(DATE, imageDate) >= CONVERT(DATE, @startDate)              
+					AND CONVERT(DATE, imageDate) <= CONVERT(DATE, @endDate)        
+					AND [count] != 0   and d.Tier =@tier       
+				GROUP BY 
+					imageDate, 
+					Results.species      
+				ORDER BY 
+					Results.species ASC
+			END
+		END 
+ 
+    IF @viewFor='ALERTSPECIES_CSV'  
+    BEGIN  
+    SELECT DISTINCT sum( [count] ) AS count, imageDate, Results.species               
+    FROM Results              
+    join dimSpecies d on d.Species =Results.species            
+    WHERE             
+    IsAlert=1                   
+    AND CONVERT(DATE, imageDate) >= CONVERT(date,@startDate)              
+    AND CONVERT(DATE, imageDate) <= CONVERT(date,@endDate)        
+    AND [count] != 0          
+    group by imageDate,Results.species      
+    ORDER BY Species ASC       
+          END  
+  
+    IF @viewFor='FISHSPECIESCSV'  
+    BEGIN  
+  
+  if @Species ='ALL Species'
+	  BEGIN
+		WITH TEMP AS        
+		(        
+		  select  distinct        
+		  FORMAT(imageTimestamp, 'yyyy-MM-dd HH:00') as ImageDate      
+		  ,sum(count) as [Count]        
+		  ,SpeciesEnglish as Species        
+		  from [dbo].[Results] a           
+		  inner join [dbo].[dimSpecies] b on a.species=b.Species           
+		  where            
+		  TIER IN(1,4) and count!=0            
+		  AND CONVERT(date, imageDate ) >= convert(date,@startDate)         
+		  and CONVERT(date, imageDate ) <= convert(date,@endDate)        
+		  group by FORMAT(imageTimestamp, 'yyyy-MM-dd HH:00'), SpeciesEnglish        
+        
+		)SELECT ROW_NUMBER() OVER (ORDER BY ImageDate) Id, *     
+		FROM TEMP        
+		ORDER BY Species ASC       
+	  END
+	  ELSE
+		BEGIN
+		WITH TEMP AS        
+		(        
+		  select  distinct        
+		  FORMAT(imageTimestamp, 'yyyy-MM-dd HH:00') as ImageDate      
+		  ,sum(count) as [Count]        
+		  ,SpeciesEnglish as Species        
+		  from [dbo].[Results] a           
+		  inner join [dbo].[dimSpecies] b on a.species=b.Species           
+		  where            
+		  TIER IN(1,4) and count!=0            
+		  AND CONVERT(date, imageDate ) >= convert(date,@startDate)         
+		  and CONVERT(date, imageDate ) <= convert(date,@endDate)        
+		  group by FORMAT(imageTimestamp, 'yyyy-MM-dd HH:00'), SpeciesEnglish        
+        
+		)SELECT ROW_NUMBER() OVER (ORDER BY ImageDate) Id, *        
+		FROM TEMP     
+		WHERE LTRIM(RTRIM(LOWER(Species)))=LTRIM(RTRIM(LOWER(@Species)))
+		ORDER BY Species ASC     
+		END
+	  END  
+  
+     IF @viewFor='INVERTABESSPECIESCSV'  
+    BEGIN  
+
+	if @Species ='ALL Species'
+	  BEGIN
+    WITH TEMP AS        
+    (        
+      select  distinct        
+      FORMAT(imageTimestamp, 'yyyy-MM-dd HH:00') as ImageDate        
+      ,sum(count) as [Count]       
+      ,SpeciesEnglish as Species        
+      from [dbo].[Results] a           
+      inner join [dbo].[dimSpecies] b on a.species=b.Species           
+      where            
+      TIER = 2       
+      and count!=0            
+      AND CONVERT(date, imageDate ) >= convert(date,@startDate)         
+      and CONVERT(date, imageDate ) <= convert(date,@endDate)        
+      group by FORMAT(imageTimestamp, 'yyyy-MM-dd HH:00'), SpeciesEnglish        
+        
+    )SELECT ROW_NUMBER() OVER (ORDER BY ImageDate) Id, *        
+    FROM TEMP        
+    ORDER BY Species ASC   
+	END
+	ELSE
+	BEGIN
+			WITH TEMP AS        
+			(        
+			select  distinct        
+			FORMAT(imageTimestamp, 'yyyy-MM-dd HH:00') as ImageDate        
+			,sum(count) as [Count]       
+			,SpeciesEnglish as Species        
+			from [dbo].[Results] a           
+			inner join [dbo].[dimSpecies] b on a.species=b.Species           
+			where            
+			TIER = 2       
+			and count!=0            
+			AND CONVERT(date, imageDate ) >= convert(date,@startDate)         
+			and CONVERT(date, imageDate ) <= convert(date,@endDate)        
+			group by FORMAT(imageTimestamp, 'yyyy-MM-dd HH:00'), SpeciesEnglish        
+        
+			)SELECT ROW_NUMBER() OVER (ORDER BY ImageDate) Id, *        
+			FROM TEMP        
+			WHERE LTRIM(RTRIM(LOWER(Species)))=LTRIM(RTRIM(LOWER(@Species)))
+			ORDER BY Species ASC   
+	END
+    END  
+
+    IF @viewFor='MEGAFAUNA'  
+    BEGIN  
+	IF @Species ='ALL Species'
+	BEGIN
+			WITH TEMP AS        
+			(        
+			  select  distinct        
+			  FORMAT(imageTimestamp, 'yyyy-MM-dd HH:00') as ImageDate        
+			  ,sum(count) as [Count]       
+			  ,SpeciesEnglish as Species        
+			  from [dbo].[Results] a           
+			  inner join [dbo].[dimSpecies] b on a.species=b.Species           
+			  where            
+			  TIER = 3    
+			  and count!=0            
+			  AND CONVERT(date, imageDate ) >= convert(date,@startDate)         
+			  and CONVERT(date, imageDate ) <= convert(date,@endDate)        
+			  group by FORMAT(imageTimestamp, 'yyyy-MM-dd HH:00'), SpeciesEnglish        
+        
+			)SELECT ROW_NUMBER() OVER (ORDER BY ImageDate) Id, *        
+			FROM TEMP        
+			ORDER BY Species ASC   
+
+	END
+	ELSE 
+		BEGIN
+		WITH TEMP AS        
+			(        
+			  select  distinct        
+			  FORMAT(imageTimestamp, 'yyyy-MM-dd HH:00') as ImageDate        
+			  ,sum(count) as [Count]       
+			  ,SpeciesEnglish as Species        
+			  from [dbo].[Results] a           
+			  inner join [dbo].[dimSpecies] b on a.species=b.Species           
+			  where            
+			  TIER = 3    
+			  and count!=0            
+			  AND CONVERT(date, imageDate ) >= convert(date,@startDate)         
+			  and CONVERT(date, imageDate ) <= convert(date,@endDate)        
+			  group by FORMAT(imageTimestamp, 'yyyy-MM-dd HH:00'), SpeciesEnglish        
+        
+			)SELECT ROW_NUMBER() OVER (ORDER BY ImageDate) Id, *        
+			FROM TEMP      
+			WHERE LTRIM(RTRIM(LOWER(Species)))=LTRIM(RTRIM(LOWER(@Species)))
+			ORDER BY Species ASC   
+		END 
+    END  
+    END TRY          
+    BEGIN CATCH          
+        SET @errCode = 400;          
+        --EXEC dbo.usp_LogError @accountID, @errCode OUTPUT                
+    END CATCH          
+END 
+GO
+/****** Object:  StoredProcedure [dbo].[tnk_GetChartData_CSVNew]    Script Date: 2024-09-11 15:58:12 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+          
+-- =============================================          
+-- tnk_GetChartData_CSV 'ALERTSPECIES_CSV','2024-05-28','2024-08-28 00:00:00',0,'',null,null  
+-- tnk_GetChartData_CSV 'FISHSPECIESCSV','2024-07-30','2024-07-30',0,'',null,null  
+-- tnk_GetChartData_CSV 'INVERTABESSPECIESCSV','2024-07-30','2024-07-30',0,'',null,null  
+-- tnk_GetChartData_CSV 0,'FISHSPECIES',0,null,null              
+          
+CREATE PROCEDURE [dbo].[tnk_GetChartData_CSVNew]                
+@viewFor VARCHAR(40) = NULL,          
+@startDate varchar(50) = NULL,    
+ @endDate varchar(50) = NULL,    
+ @userId INT = NULL,    
+ @station varchar(500)=null,  
+ @tier int=null,  
+ @Species varchar(500)=null,
+ @errCode SMALLINT OUTPUT          
+AS          
+BEGIN          
+    SET NOCOUNT ON;          
+    SET @errCode = 200;          
+          
+    BEGIN TRY          
+    IF @viewFor='ALERTSPECIES_CSV'  
+    BEGIN  
+    SELECT DISTINCT sum( [count] ) AS count, imageDate, Results.species               
+    FROM Results              
+    join dimSpecies d on d.Species =Results.species            
+    WHERE             
+    IsAlert=1                   
+    AND CONVERT(DATE, imageDate) >= CONVERT(date,@startDate)              
+    AND CONVERT(DATE, imageDate) <= CONVERT(date,@endDate)        
+    AND [count] != 0          
+    group by imageDate,Results.species      
+    ORDER BY Species ASC       
+          END  
+  
+    IF @viewFor='FISHSPECIESCSV'  
+    BEGIN  
+  
+  if @Species ='ALL Species'
+	  BEGIN
+		WITH TEMP AS        
+		(        
+		  select  distinct        
+		  FORMAT(imageTimestamp, 'yyyy-MM-dd HH:00') as ImageDate      
+		  ,sum(count) as [Count]        
+		  ,SpeciesEnglish as Species        
+		  from [dbo].[Results] a           
+		  inner join [dbo].[dimSpecies] b on a.species=b.Species           
+		  where            
+		  TIER IN(1,4) and count!=0            
+		  AND CONVERT(date, imageDate ) >= convert(date,@startDate)         
+		  and CONVERT(date, imageDate ) <= convert(date,@endDate)        
+		  group by FORMAT(imageTimestamp, 'yyyy-MM-dd HH:00'), SpeciesEnglish        
+        
+		)SELECT ROW_NUMBER() OVER (ORDER BY ImageDate) Id, *     
+		FROM TEMP        
+		ORDER BY Species ASC       
+	  END
+	  ELSE
+		BEGIN
+		WITH TEMP AS        
+		(        
+		  select  distinct        
+		  FORMAT(imageTimestamp, 'yyyy-MM-dd HH:00') as ImageDate      
+		  ,sum(count) as [Count]        
+		  ,SpeciesEnglish as Species        
+		  from [dbo].[Results] a           
+		  inner join [dbo].[dimSpecies] b on a.species=b.Species           
+		  where            
+		  TIER IN(1,4) and count!=0            
+		  AND CONVERT(date, imageDate ) >= convert(date,@startDate)         
+		  and CONVERT(date, imageDate ) <= convert(date,@endDate)        
+		  group by FORMAT(imageTimestamp, 'yyyy-MM-dd HH:00'), SpeciesEnglish        
+        
+		)SELECT ROW_NUMBER() OVER (ORDER BY ImageDate) Id, *        
+		FROM TEMP     
+		WHERE LTRIM(RTRIM(LOWER(Species)))=LTRIM(RTRIM(LOWER(@Species)))
+		ORDER BY Species ASC     
+		END
+	  END  
+  
+     IF @viewFor='INVERTABESSPECIESCSV'  
+    BEGIN  
+
+	if @Species ='ALL Species'
+	  BEGIN
+    WITH TEMP AS        
+    (        
+      select  distinct        
+      FORMAT(imageTimestamp, 'yyyy-MM-dd HH:00') as ImageDate        
+      ,sum(count) as [Count]       
+      ,SpeciesEnglish as Species        
+      from [dbo].[Results] a           
+      inner join [dbo].[dimSpecies] b on a.species=b.Species           
+      where            
+      TIER = 2       
+      and count!=0            
+      AND CONVERT(date, imageDate ) >= convert(date,@startDate)         
+      and CONVERT(date, imageDate ) <= convert(date,@endDate)        
+      group by FORMAT(imageTimestamp, 'yyyy-MM-dd HH:00'), SpeciesEnglish        
+        
+    )SELECT ROW_NUMBER() OVER (ORDER BY ImageDate) Id, *        
+    FROM TEMP        
+    ORDER BY Species ASC   
+	END
+	ELSE
+	BEGIN
+			WITH TEMP AS        
+			(        
+			select  distinct        
+			FORMAT(imageTimestamp, 'yyyy-MM-dd HH:00') as ImageDate        
+			,sum(count) as [Count]       
+			,SpeciesEnglish as Species        
+			from [dbo].[Results] a           
+			inner join [dbo].[dimSpecies] b on a.species=b.Species           
+			where            
+			TIER = 2       
+			and count!=0            
+			AND CONVERT(date, imageDate ) >= convert(date,@startDate)         
+			and CONVERT(date, imageDate ) <= convert(date,@endDate)        
+			group by FORMAT(imageTimestamp, 'yyyy-MM-dd HH:00'), SpeciesEnglish        
+        
+			)SELECT ROW_NUMBER() OVER (ORDER BY ImageDate) Id, *        
+			FROM TEMP        
+			WHERE LTRIM(RTRIM(LOWER(Species)))=LTRIM(RTRIM(LOWER(@Species)))
+			ORDER BY Species ASC   
+	END
+    END  
+
+    IF @viewFor='MEGAFAUNA'  
+    BEGIN  
+	IF @Species ='ALL Species'
+	BEGIN
+			WITH TEMP AS        
+			(        
+			  select  distinct        
+			  FORMAT(imageTimestamp, 'yyyy-MM-dd HH:00') as ImageDate        
+			  ,sum(count) as [Count]       
+			  ,SpeciesEnglish as Species        
+			  from [dbo].[Results] a           
+			  inner join [dbo].[dimSpecies] b on a.species=b.Species           
+			  where            
+			  TIER = 3    
+			  and count!=0            
+			  AND CONVERT(date, imageDate ) >= convert(date,@startDate)         
+			  and CONVERT(date, imageDate ) <= convert(date,@endDate)        
+			  group by FORMAT(imageTimestamp, 'yyyy-MM-dd HH:00'), SpeciesEnglish        
+        
+			)SELECT ROW_NUMBER() OVER (ORDER BY ImageDate) Id, *        
+			FROM TEMP        
+			ORDER BY Species ASC   
+
+	END
+	ELSE 
+		BEGIN
+		WITH TEMP AS        
+			(        
+			  select  distinct        
+			  FORMAT(imageTimestamp, 'yyyy-MM-dd HH:00') as ImageDate        
+			  ,sum(count) as [Count]       
+			  ,SpeciesEnglish as Species        
+			  from [dbo].[Results] a           
+			  inner join [dbo].[dimSpecies] b on a.species=b.Species           
+			  where            
+			  TIER = 3    
+			  and count!=0            
+			  AND CONVERT(date, imageDate ) >= convert(date,@startDate)         
+			  and CONVERT(date, imageDate ) <= convert(date,@endDate)        
+			  group by FORMAT(imageTimestamp, 'yyyy-MM-dd HH:00'), SpeciesEnglish        
+        
+			)SELECT ROW_NUMBER() OVER (ORDER BY ImageDate) Id, *        
+			FROM TEMP      
+			WHERE LTRIM(RTRIM(LOWER(Species)))=LTRIM(RTRIM(LOWER(@Species)))
+			ORDER BY Species ASC   
+		END 
+    END  
+    END TRY          
+    BEGIN CATCH          
+        SET @errCode = 400;          
+        --EXEC dbo.usp_LogError @accountID, @errCode OUTPUT                
+    END CATCH          
+END 
+GO
+/****** Object:  StoredProcedure [dbo].[tnk_GetImageData]    Script Date: 2024-09-11 15:58:12 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+-- tnk_GetImageData '2024-08-28','2024-08-28',null,null
+CREATE PROC [dbo].[tnk_GetImageData]
+(
+	@startDate varchar(50)=null,
+	@endDate varchar(50)=null,
+	@species varchar(50)=null,
+	@Tier int =null
+)
+AS
+BEGIN
+
+SELECT R.* FROM Results R 
+JOIN DIMSPECIES D ON D.Species =R.Species
+WHERE Tier=4
+ AND CONVERT(date, imageDate ) >= convert(date,@startDate)       
+   and CONVERT(date, imageDate ) <= convert(date,@endDate)      
+
+END
+GO
+/****** Object:  StoredProcedure [dbo].[tnk_GetPicsOftheByBlobURL]    Script Date: 2024-09-11 15:58:12 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+        
+-- tnk_GetPicsOftheByBlobURL 0,'2024-08-07',null 
+-- tnk_GetPicsOftheByBlobURL 0,'2024-07-03',null 
+-- tnk_GetPicsOftheByBlobURL 0,'2024-08-28',null 
+CREATE PROC [dbo].[tnk_GetPicsOftheByBlobURL]     
+(        
+  @userid int=null,    
+  @startDate varchar(50)=null,    
+  @errCode SMALLINT OUTPUT  
+)        
+AS        
+SET NOCOUNT ON            
+ SET @errCode = 200;    
+BEGIN    
+ BEGIN TRY     
+
+ DECLARE @BlobSASToken nvarchar(500)
+ SET @BlobSASToken=(SELECT top 1 Token FROM BlobImageToken WHERE TokenName='SAS Token');
+
+
+WITH TEMP AS      
+(      
+    SELECT     id,  filename , modified_coolness_score,blob_url,         
+    (      
+    SELECT value AS Part           
+    FROM (SELECT value, ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) AS RowNum      
+    FROM STRING_SPLIT(blob_url, '/')       ) AS     
+  SplitData          
+  WHERE RowNum = (SELECT MAX(RowNum) - 1     
+  FROM (SELECT ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) AS RowNum         
+  FROM STRING_SPLIT(blob_url, '/')) AS RowNums)) as ImageDate    FROM     CoolestImages      
+    
+ ) SELECT TOP 12  blob_url+@BlobSASToken  as [Path],[filename] as [Name]
+ FROM TEMP      
+ WHERE CONVERT(varchar(50), ImageDate)= CONVERT(DATE,@startDate)      
+	AND modified_coolness_score !=0      
+ ORDER BY modified_coolness_score DESC;      
+
+
+ END TRY            
+ BEGIN CATCH            
+  SET @errCode = 400;            
+  --EXEC dbo.usp_LogError @accountID, @errCode OUTPUT            
+ END CATCH  
+END
+GO
+/****** Object:  StoredProcedure [dbo].[tnk_GetPicsOftheDayImageData]    Script Date: 2024-09-11 15:58:12 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+  
+-- tnk_GetPicsOftheDayImageData '2024-07-28'
+CREATE PROC [dbo].[tnk_GetPicsOftheDayImageData]  
+(  
+	 @today varchar(50)=null
+)  
+AS  
+BEGIN  
+  
+  DECLARE @CoolestIamge TABLE (
+    id INT,
+    blob_url varchar(500),
+	filename varchar(500),
+    modified_coolness_score float,
+	imageDate varchar(50),
+	RowNum int 
+);
+
+INSERT INTO @CoolestIamge (id, blob_url, filename,modified_coolness_score,RowNum)
+SELECT TOP 12 
+    id, blob_url, filename,modified_coolness_score, ROW_NUMBER() OVER (ORDER BY modified_coolness_score Desc) AS RowNum 
+	FROM CoolestImages
+	ORDER BY modified_coolness_score DESC;
+
+
+
+DECLARE @CurrentRow INT = 1;
+DECLARE @TotalRows INT;
+
+SELECT @TotalRows = COUNT(*) FROM @CoolestIamge;
+  WHILE @CurrentRow <= @TotalRows
+	BEGIN
+			DECLARE @id INT;
+			DECLARE @URL NVARCHAR(MAX)
+			DECLARE @IMAGEDATE VARCHAR(50)
+			SELECT @id = id FROM @CoolestIamge WHERE RowNum = @CurrentRow;
+			SELECT @URL = blob_url FROM @CoolestIamge WHERE RowNum = @CurrentRow;
+		print @id
+		print @URL;
+
+				with temp as 
+				(
+				SELECT ROW_NUMBER() OVER (ORDER BY value Desc) AS RowNum ,value 
+				FROM STRING_SPLIT(@URL, '/')
+				)select @IMAGEDATE=value from temp
+				WHERE RowNum =5;
+		
+			UPDATE @CoolestIamge SET ImageDate=@IMAGEDATE WHERE ID=@id
+			
+		SET @CurrentRow = @CurrentRow + 1;
+	END
+
+	select id, blob_url, filename,modified_coolness_score,imageDate from @CoolestIamge
+END
+GO
+/****** Object:  StoredProcedure [dbo].[tnk_GetPicsOftheDayImageDataNew]    Script Date: 2024-09-11 15:58:12 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+      
+-- tnk_GetPicsOftheDayImageDataNew '2024-08-07'    
+CREATE PROC [dbo].[tnk_GetPicsOftheDayImageDataNew]    
+(      
+  @today varchar(50)=null    
+)      
+AS      
+BEGIN      
+WITH TEMP AS    
+(    
+    SELECT     id,  filename , modified_coolness_score,blob_url,       
+    (    
+    SELECT value AS Part         
+    FROM (SELECT value, ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) AS RowNum    
+    FROM STRING_SPLIT(blob_url, '/')       ) AS   
+  SplitData        
+  WHERE RowNum = (SELECT MAX(RowNum) - 1   
+  FROM (SELECT ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) AS RowNum       
+  FROM STRING_SPLIT(blob_url, '/')) AS RowNums)) as ImageDate    FROM     CoolestImages    
+  
+ ) SELECT TOP 12* FROM TEMP    
+ WHERE CONVERT(varchar(50), ImageDate)= CONVERT(DATE,@today)    
+ AND modified_coolness_score !=0    
+ ORDER BY modified_coolness_score DESC;    
+     
+END
+GO
+/****** Object:  StoredProcedure [dbo].[tnk_GetUndefindePics]    Script Date: 2024-09-11 15:58:12 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+--tnk_GetUndefinedComment 0,'2024-07-01',null
+CREATE PROC [dbo].[tnk_GetUndefindePics]
+(
+		@userid int=null,
+		@startDate varchar(50)=null,
+		@endDate varchar(50)=null,
+		@errCode SMALLINT OUTPUT       
+)
+AS
+ SET NOCOUNT ON        
+ SET @errCode = 200;
+BEGIN
+ BEGIN TRY 
+   
+
+ select * from [dbo].[Results] a left join [dbo].[dimSpecies] b on a.species=b.Species
+ where B.Tier=4
+
+ END TRY        
+ BEGIN CATCH        
+  SET @errCode = 400;        
+  --EXEC dbo.usp_LogError @accountID, @errCode OUTPUT        
+ END CATCH 
+END 
+GO
+/****** Object:  StoredProcedure [dbo].[tnk_GetUndefinedComment]    Script Date: 2024-09-11 15:58:12 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+    
+--tnk_GetUndefinedComment 0,'2024-10-10',null    
+CREATE PROC [dbo].[tnk_GetUndefinedComment]    
+(    
+  @userid int=null,    
+  @Month varchar(50)=null,    
+   @errCode SMALLINT OUTPUT           
+)    
+AS    
+ SET NOCOUNT ON            
+ SET @errCode = 200;    
+BEGIN    
+ BEGIN TRY     
+   
+ 
+ DECLARE @COUNT INT 
+ SET @COUNT=(select top(1) count(1)  from UndefinedSpecMonthlyComm    
+ WHERE  MONTH([Month]) = MONTH(@Month))
+
+ if @COUNT>0
+ BEGIN
+	 select top(1)* from UndefinedSpecMonthlyComm    
+	 WHERE  MONTH([Month]) = MONTH(@Month)
+ END 
+ ELSE
+	BEGIN
+	select	CONVERT(INT, 1) AS CommentiD, convert(varchar(50),'') [Month],
+		convert(varchar(50),'NA') as Comment
+	END
+    
+ END TRY            
+ BEGIN CATCH            
+  SET @errCode = 400;            
+  --EXEC dbo.usp_LogError @accountID, @errCode OUTPUT            
+ END CATCH     
+END 
+GO
+/****** Object:  StoredProcedure [dbo].[tnk_GetUndefinedImage]    Script Date: 2024-09-11 15:58:12 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+    
+--tnk_GetUndefinedImage 0,'2024-08-07',null    
+--tnk_GetUndefinedImage 0,'2024-08-30',null    
+CREATE PROC [dbo].[tnk_GetUndefinedImage]    
+(    
+  @userid int=null,    
+  @startDate varchar(50)=null,    
+  @errCode SMALLINT OUTPUT           
+)    
+AS    
+ SET NOCOUNT ON            
+ SET @errCode = 200;    
+BEGIN    
+ BEGIN TRY     
+  
+  DECLARE @BlobSASToken nvarchar(500)
+  
+  SET @BlobSASToken=(SELECT top 1 Token FROM BlobImageToken WHERE TokenName='SAS Token')
+
+  SELECT  distinct   
+  blob_url+@BlobSASToken  as [Url],
+  --'?sv=2022-11-02&ss=bfqt&srt=sco&sp=rlaptfx&se=2025-08-30T13:47:47Z&st=2024-08-30T05:47:47Z&spr=https,http&sig=SWXwcnpelwbSI8iCrHOHuNoC6wWPjcTlZnoV3EeCmuI%3D' 
+  [filename] as AltText
+  FROM Results R           
+  WHERE R.SPECIES='fish'    
+ AND CONVERT(date, imageDate ) = convert(date,@startDate)      
+ group by ImageDate,filename,blob_url  
+    
+ END TRY            
+ BEGIN CATCH            
+  SET @errCode = 400;            
+  --EXEC dbo.usp_LogError @accountID, @errCode OUTPUT            
+ END CATCH     
+END 
+GO
+/****** Object:  StoredProcedure [dbo].[tnk_GetUndefinedImageData]    Script Date: 2024-09-11 15:58:12 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+      
+-- tnk_GetUndefinedImageData '2024-07-28','2024-07-30'    
+CREATE PROC [dbo].[tnk_GetUndefinedImageData]      
+(      
+ @startDate varchar(50)=null,      
+ @endDate varchar(50)=null    
+)      
+AS      
+BEGIN      
+      
+  /*SELECT  distinct top 10 R.id, R.filename,R.blob_url,(  
+	   SELECT value AS Part       
+	   FROM (SELECT value, ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) AS RowNum  
+	   FROM STRING_SPLIT(blob_url, '/')       ) AS 
+		SplitData      
+		WHERE RowNum = (SELECT MAX(RowNum) - 1 
+		FROM (SELECT ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) AS RowNum     
+		FROM STRING_SPLIT(blob_url, '/')) AS RowNums)) as ImageDate,
+		'' as 'modified_coolness_score'
+		FROM Results R       
+  JOIN DIMSPECIES D ON D.Species =R.Species      
+  WHERE Tier=4      
+  --AND CONVERT(date, imageDate ) >= convert(date,@startDate)             
+  --and CONVERT(date, imageDate ) <= convert(date,@endDate)            
+      */
+	   SELECT distinct CONVERT(varchar(50), R.ImageDate) as ImageDate,
+	  convert(int, ROW_NUMBER() OVER (ORDER BY ImageDate) )AS Id
+		FROM Results R       
+  JOIN DIMSPECIES D ON D.Species =R.Species     
+  WHERE Tier=4    
+  group by ImageDate
+END
+GO
+/****** Object:  StoredProcedure [dbo].[tnk_GetUndefinedImageWithAllFilname]    Script Date: 2024-09-11 15:58:12 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+          
+-- tnk_GetUndefinedImageWithAllFilname '2024-07-28','2024-07-30'        
+CREATE PROC [dbo].[tnk_GetUndefinedImageWithAllFilname]          
+(          
+ @startDate varchar(50)=null,          
+ @endDate varchar(50)=null        
+)          
+AS          
+BEGIN          
+       
+WITH TEMP AS (    
+  SELECT  distinct   R.filename,R.blob_url,(      
+    SELECT value AS Part           
+    FROM (SELECT value, ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) AS RowNum      
+    FROM STRING_SPLIT(blob_url, '/')       ) AS     
+  SplitData          
+  WHERE RowNum = (SELECT MAX(RowNum) - 1     
+  FROM (SELECT ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) AS RowNum         
+  FROM STRING_SPLIT(blob_url, '/')) AS RowNums)) as ImageDate,    
+  convert(float,'') as 'modified_coolness_score'    
+  FROM Results R           
+  --JOIN DIMSPECIES D ON D.Species =R.Species      
+  WHERE R.SPECIES='fish'    
+  group by ImageDate,filename,blob_url    
+  --AND CONVERT(date, imageDate ) >= convert(date,@startDate)                 
+  --and CONVERT(date, imageDate ) <= convert(date,@endDate)                
+      ) SELECT convert(int, ROW_NUMBER() OVER (ORDER BY ImageDate asc)) AS id,* FROM TEMP    
+   order by filename asc  
+END
+GO
